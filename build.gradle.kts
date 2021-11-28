@@ -13,7 +13,7 @@ buildscript {
 
 subprojects {
     group = "com.github.kr328.magic"
-    version = "1.0"
+    version = "1.1"
 
     repositories {
         google()

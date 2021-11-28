@@ -3,10 +3,12 @@ package com.github.kr328.magic.proxy;
 import android.annotation.SuppressLint;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 
 @SuppressLint("DiscouragedPrivateApi")
@@ -69,7 +71,11 @@ public final class ServiceManagerProxy {
                             final Binder service = (Binder) args[1];
 
                             try {
-                                method.invoke(original, addServiceFilter.apply(name, service));
+                                final Object[] newArgs = Arrays.copyOf(args, args.length);
+
+                                newArgs[1] = addServiceFilter.apply(name, service);
+
+                                return method.invoke(original, newArgs);
                             } catch (Exception ignored) {
                                 // Ignore filter exceptions
                             }
