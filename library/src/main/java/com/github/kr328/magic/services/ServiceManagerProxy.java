@@ -1,4 +1,4 @@
-package com.github.kr328.magic.proxy;
+package com.github.kr328.magic.services;
 
 import android.annotation.SuppressLint;
 import android.os.Binder;
@@ -10,9 +10,8 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 
-@Deprecated
 @SuppressLint("DiscouragedPrivateApi")
-public final class ServiceManagerProxy {
+public class ServiceManagerProxy {
     private final BiFunction<String, Binder, Binder> addServiceFilter;
     private final BiFunction<String, IBinder, IBinder> getServiceFilter;
     private boolean installed = false;
