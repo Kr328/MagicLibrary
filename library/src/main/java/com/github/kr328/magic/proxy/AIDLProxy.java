@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+@Deprecated
 public final class AIDLProxy {
     public static <T extends IInterface> Binder newServer(
             Class<T> interfaceClass,
