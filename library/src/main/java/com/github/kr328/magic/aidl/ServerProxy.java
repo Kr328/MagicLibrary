@@ -14,10 +14,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class ServerProxy {
+    public static <O extends IInterface, R extends IInterface> ServerProxyFactory<O, R> mustCreateFactory(
+            final Class<O> original,
+            final Class<R> replace,
+            final boolean strict
+    ) {
+        try {
+            return createFactory(original, replace, strict);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static <O extends IInterface, R extends IInterface> ServerProxyFactory<O, R> createFactory(
-            Class<O> original,
-            Class<R> replace,
-            boolean strict
+            final Class<O> original,
+            final Class<R> replace,
+            final boolean strict
     ) throws ReflectiveOperationException {
         ClassLoader classLoader = original.getClassLoader();
         if (classLoader == null) {
