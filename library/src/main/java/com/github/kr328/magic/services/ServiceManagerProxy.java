@@ -51,7 +51,7 @@ public class ServiceManagerProxy {
                 ServiceManagerProxy.class.getClassLoader(),
                 new Class[]{cIServiceManager},
                 (_proxy, method, args) -> {
-                    if (method.getName().startsWith("getService") && args.length >= 1) {
+                    if (method.getName().startsWith("getService") && args != null && args.length >= 1) {
                         if (args[0] instanceof String) {
                             try {
                                 final String name = (String) args[0];
@@ -64,7 +64,7 @@ public class ServiceManagerProxy {
 
                             return method.invoke(original, args);
                         }
-                    } else if (method.getName().startsWith("addService") && args.length >= 2) {
+                    } else if (method.getName().startsWith("addService") && args != null && args.length >= 2) {
                         if (args[0] instanceof String && args[1] instanceof Binder) {
                             final String name = (String) args[0];
                             final Binder service = (Binder) args[1];
