@@ -2,5 +2,6 @@ plugins {
     id("com.android.library")
 }
 
-dependencies {
+android {
+    namespace = "com.github.kr328.magic.hideapi"
 }
