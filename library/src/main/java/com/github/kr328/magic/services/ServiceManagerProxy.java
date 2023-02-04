@@ -43,7 +43,7 @@ public class ServiceManagerProxy {
                 if (args != null &&
                         args.length >= 1 &&
                         args[0] instanceof String &&
-                        IBinder.class.isAssignableFrom(method.getReturnType())
+                        method.getReturnType().isAssignableFrom(IBinder.class)
                 ) {
                     try {
                         return interceptor.getService(
