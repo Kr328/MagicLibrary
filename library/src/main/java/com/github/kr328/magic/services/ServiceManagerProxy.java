@@ -3,9 +3,12 @@ package com.github.kr328.magic.services;
 import android.annotation.SuppressLint;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.IServiceManager;
+import android.os.ServiceManager;
 import android.util.Log;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
@@ -20,11 +23,64 @@ public class ServiceManagerProxy {
     private boolean installed = false;
 
     private ServiceManagerProxy(
-            BiFunction<String, Binder, Binder> addServiceFilter,
-            BiFunction<String, IBinder, IBinder> getServiceFilter
+            final BiFunction<String, Binder, Binder> addServiceFilter,
+            final BiFunction<String, IBinder, IBinder> getServiceFilter
     ) {
         this.addServiceFilter = addServiceFilter;
         this.getServiceFilter = getServiceFilter;
+    }
+
+    public static void install(final Interceptor interceptor) throws ReflectiveOperationException {
+        final Method mGetIServiceManager = ServiceManager.class.getDeclaredMethod("getIServiceManager");
+        final Field fSServiceManager = ServiceManager.class.getDeclaredField("sServiceManager");
+
+        mGetIServiceManager.setAccessible(true);
+        fSServiceManager.setAccessible(true);
+
+        final Object original = mGetIServiceManager.invoke(null);
+        final InvocationHandler handler = (proxy, method, args) -> {
+            if ("getService".equals(method.getName())) {
+                if (args != null &&
+                        args.length >= 1 &&
+                        args[0] instanceof String &&
+                        method.getReturnType().isAssignableFrom(IBinder.class)
+                ) {
+                    try {
+                        return interceptor.getService(
+                                (String) args[0],
+                                (IBinder) method.invoke(original, args)
+                        );
+                    } catch (final Throwable throwable) {
+                        Log.e(TAG, "Handler: getService", throwable);
+                    }
+                }
+            } else if ("addService".equals(method.getName())) {
+                if (args != null &&
+                        args.length >= 2 &&
+                        args[0] instanceof String &&
+                        args[1] instanceof Binder
+                ) {
+                    try {
+                        final Object[] newArgs = Arrays.copyOf(args, args.length);
+
+                        newArgs[1] = interceptor.addService((String) newArgs[0], (Binder) newArgs[1]);
+
+                        return method.invoke(original, newArgs);
+                    } catch (final Throwable throwable) {
+                        Log.e(TAG, "Handler: addService", throwable);
+                    }
+                }
+            }
+
+            return method.invoke(original, args);
+        };
+        final Object proxy = Proxy.newProxyInstance(
+                ServiceManagerProxy.class.getClassLoader(),
+                new Class[]{IServiceManager.class},
+                handler
+        );
+
+        fSServiceManager.set(null, proxy);
     }
 
     private static ClassLoader getClassLoader() {
@@ -41,56 +97,25 @@ public class ServiceManagerProxy {
             return;
         }
 
-        final Class<?> cServiceManager = getClassLoader().loadClass("android.os.ServiceManager");
-        final Class<?> cIServiceManager = getClassLoader().loadClass("android.os.IServiceManager");
-        final Method mGetIServiceManager = cServiceManager.getDeclaredMethod("getIServiceManager");
-        final Field fSServiceManager = cServiceManager.getDeclaredField("sServiceManager");
-
-        mGetIServiceManager.setAccessible(true);
-        fSServiceManager.setAccessible(true);
-
-        final Object original = mGetIServiceManager.invoke(null);
-        final Object proxy = Proxy.newProxyInstance(
-                ServiceManagerProxy.class.getClassLoader(),
-                new Class[]{cIServiceManager},
-                (_proxy, method, args) -> {
-                    switch (method.getName()) {
-                        case "getService": {
-                            if (args != null && args.length >= 1 && args[0] instanceof String && method.getReturnType() == IBinder.class) {
-                                try {
-                                    final String name = (String) args[0];
-                                    final IBinder service = (IBinder) method.invoke(original, args);
-
-                                    return getServiceFilter.apply(name, service);
-                                } catch (Throwable throwable) {
-                                    Log.w(TAG, "Filter of getService: " + throwable, throwable);
-                                }
-                            }
-                            break;
-                        }
-                        case "addService": {
-                            if (args != null && args.length >= 2 && args[0] instanceof String && args[1] instanceof Binder) {
-                                try {
-                                    final String name = (String) args[0];
-                                    final Binder service = (Binder) args[1];
-                                    final Object[] newArgs = Arrays.copyOf(args, args.length);
-
-                                    newArgs[1] = addServiceFilter.apply(name, service);
-
-                                    return method.invoke(original, newArgs);
-                                } catch (Throwable throwable) {
-                                    Log.w(TAG, "Filter of addService: " + throwable, throwable);
-                                }
-                            }
-                            break;
-                        }
-                    }
-
-                    return method.invoke(original, args);
+        install(new Interceptor() {
+            @Override
+            public IBinder getService(final String name, final IBinder service) {
+                if (getServiceFilter != null) {
+                    return getServiceFilter.apply(name, service);
                 }
-        );
 
-        fSServiceManager.set(null, proxy);
+                return service;
+            }
+
+            @Override
+            public Binder addService(final String name, final Binder service) {
+                if (addServiceFilter != null) {
+                    return addServiceFilter.apply(name, service);
+                }
+
+                return service;
+            }
+        });
 
         installed = true;
     }
@@ -107,16 +132,26 @@ public class ServiceManagerProxy {
         installed = false;
     }
 
+    public abstract static class Interceptor {
+        public IBinder getService(final String name, final IBinder service) {
+            return service;
+        }
+
+        public Binder addService(final String name, final Binder service) {
+            return service;
+        }
+    }
+
     public static final class Builder {
         private BiFunction<String, Binder, Binder> addServiceFilter;
         private BiFunction<String, IBinder, IBinder> getServiceFilter;
 
-        public Builder setAddServiceFilter(BiFunction<String, Binder, Binder> func) {
+        public Builder setAddServiceFilter(final BiFunction<String, Binder, Binder> func) {
             this.addServiceFilter = func;
             return this;
         }
 
-        public Builder setGetServiceFilter(BiFunction<String, IBinder, IBinder> func) {
+        public Builder setGetServiceFilter(final BiFunction<String, IBinder, IBinder> func) {
             this.getServiceFilter = func;
             return this;
         }

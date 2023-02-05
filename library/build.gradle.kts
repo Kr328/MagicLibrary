@@ -6,6 +6,10 @@ plugins {
 android {
     namespace = "com.github.kr328.magic"
 
+    defaultConfig {
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
     publishing {
         multipleVariants("all") {
             withSourcesJar()

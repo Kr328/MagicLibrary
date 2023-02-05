@@ -1,12 +1,12 @@
 import com.android.build.gradle.BaseExtension
 
 plugins {
-    id("com.android.library") version "7.3.0" apply false
+    id("com.android.library") version "7.4.1" apply false
 }
 
 subprojects {
     group = "com.github.kr328.magic"
-    version = "1.4"
+    version = "1.5"
 
     plugins.withId("com.android.base") {
         extensions.configure<BaseExtension> {
