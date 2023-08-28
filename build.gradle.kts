@@ -1,20 +1,20 @@
 import com.android.build.gradle.BaseExtension
 
 plugins {
-    id("com.android.library") version "7.4.1" apply false
+    id("com.android.library") version "8.0.2" apply false
 }
 
 subprojects {
     group = "com.github.kr328.magic"
-    version = "1.5"
+    version = "1.6"
 
     plugins.withId("com.android.base") {
         extensions.configure<BaseExtension> {
-            compileSdkVersion(33)
+            compileSdkVersion(34)
 
             defaultConfig {
                 minSdk = 26
-                targetSdk = 33
+                targetSdk = 34
             }
         }
     }
