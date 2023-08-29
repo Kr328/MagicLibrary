@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
 public final class ClassLoaderUtils {
     @SuppressWarnings("JavaReflectionMemberAccess")
     @SuppressLint("DiscouragedPrivateApi")
-    public static ClassLoader replaceParentClassLoader(ClassLoader target, ClassLoader newParent) throws ReflectiveOperationException {
+    public static ClassLoader replaceParentClassLoader(final ClassLoader target, final ClassLoader newParent) throws ReflectiveOperationException {
         final Field field = ClassLoader.class.getDeclaredField("parent");
         field.setAccessible(true);
 
