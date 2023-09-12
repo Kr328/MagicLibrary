@@ -6,7 +6,7 @@ plugins {
 
 subprojects {
     group = "com.github.kr328.magic"
-    version = "1.6"
+    version = "1.7"
 
     plugins.withId("com.android.base") {
         extensions.configure<BaseExtension> {
@@ -62,5 +62,5 @@ subprojects {
 }
 
 task("clean", type = Delete::class) {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }

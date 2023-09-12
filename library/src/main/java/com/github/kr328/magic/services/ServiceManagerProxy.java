@@ -9,6 +9,7 @@ import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
@@ -50,6 +51,8 @@ public class ServiceManagerProxy {
                                 (String) args[0],
                                 (IBinder) method.invoke(original, args)
                         );
+                    } catch (final InvocationTargetException e) {
+                        throw e.getTargetException();
                     } catch (final Throwable throwable) {
                         Log.e(TAG, "Handler: getService", throwable);
                     }
@@ -66,13 +69,19 @@ public class ServiceManagerProxy {
                         newArgs[1] = interceptor.addService((String) newArgs[0], (Binder) newArgs[1]);
 
                         return method.invoke(original, newArgs);
+                    } catch (final InvocationTargetException e) {
+                        throw e.getTargetException();
                     } catch (final Throwable throwable) {
                         Log.e(TAG, "Handler: addService", throwable);
                     }
                 }
             }
 
-            return method.invoke(original, args);
+            try {
+                return method.invoke(original, args);
+            } catch (final InvocationTargetException e) {
+                throw e.getTargetException();
+            }
         };
         final Object proxy = Proxy.newProxyInstance(
                 ServiceManagerProxy.class.getClassLoader(),

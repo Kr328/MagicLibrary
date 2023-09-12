@@ -7,7 +7,7 @@ public final class ServiceManager {
         throw new IllegalArgumentException("Stub!");
     }
 
-    public static IBinder getService(String name) {
+    public static IBinder getService(final String name) {
         throw new IllegalArgumentException("Stub!");
     }
 }

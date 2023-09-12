@@ -21,7 +21,7 @@ public final class ServerProxy {
     ) {
         try {
             return createFactory(original, replace, strict);
-        } catch (ReflectiveOperationException e) {
+        } catch (final ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
@@ -40,8 +40,8 @@ public final class ServerProxy {
 
         final Set<Integer> transactCodes = new HashSet<>();
 
-        for (Method method : replace.getMethods()) {
-            TransactProxy proxy = method.getAnnotation(TransactProxy.class);
+        for (final Method method : replace.getMethods()) {
+            final TransactProxy proxy = method.getAnnotation(TransactProxy.class);
             if (proxy == null) {
                 continue;
             }
@@ -52,7 +52,7 @@ public final class ServerProxy {
 
             try {
                 original.getMethod(method.getName(), method.getParameterTypes());
-            } catch (ReflectiveOperationException e) {
+            } catch (final ReflectiveOperationException e) {
                 if (strict) {
                     throw e;
                 }
@@ -70,7 +70,7 @@ public final class ServerProxy {
             final IBinder fallback = o.asBinder();
 
             @Override
-            protected boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+            protected boolean onTransact(final int code, final Parcel data, final Parcel reply, final int flags) throws RemoteException {
                 if (transactCodes.contains(code)) {
                     return delegate.transact(code, data, reply, flags);
                 }
@@ -79,26 +79,26 @@ public final class ServerProxy {
             }
 
             @Override
-            public void linkToDeath(DeathRecipient recipient, int flags) {
+            public void linkToDeath(final DeathRecipient recipient, final int flags) {
                 try {
                     delegate.linkToDeath(recipient, flags);
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                     throw new RuntimeException(e);
                 }
             }
 
             @Override
-            public boolean unlinkToDeath(DeathRecipient recipient, int flags) {
+            public boolean unlinkToDeath(final DeathRecipient recipient, final int flags) {
                 return delegate.unlinkToDeath(recipient, flags);
             }
 
             @Override
-            public void attachInterface(IInterface owner, String descriptor) {
+            public void attachInterface(final IInterface owner, final String descriptor) {
                 // ignore
             }
 
             @Override
-            public IInterface queryLocalInterface(String descriptor) {
+            public IInterface queryLocalInterface(final String descriptor) {
                 return null;
             }
 
@@ -106,7 +106,7 @@ public final class ServerProxy {
             public String getInterfaceDescriptor() {
                 try {
                     return fallback.getInterfaceDescriptor();
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                     throw new RuntimeException(e);
                 }
             }
