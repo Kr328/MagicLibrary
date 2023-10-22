@@ -5,6 +5,7 @@ import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;
 import android.os.RemoteException;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,6 +18,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class ServerProxy {
+    private static final String TAG = "ServerProxy";
+
     @NonNull
     public static <O extends IInterface, R extends IInterface> ServerProxyFactory<O, R> mustCreateFactory(
             @NonNull final Class<O> original,
@@ -26,6 +29,8 @@ public final class ServerProxy {
         try {
             return createFactory(original, replace, strict);
         } catch (final ReflectiveOperationException e) {
+            Log.e(TAG, "Create factory of " + replace + " failed", e);
+
             throw new RuntimeException(e);
         }
     }
@@ -41,6 +46,8 @@ public final class ServerProxy {
             classLoader = ClassLoader.getSystemClassLoader();
         }
 
+        Log.d(TAG, "Create factory of " + replace);
+
         final Class<?> stub = classLoader.loadClass(original.getName() + "$Stub");
 
         final Set<Integer> transactCodes = new HashSet<>();
@@ -51,6 +58,8 @@ public final class ServerProxy {
                 continue;
             }
 
+            Log.d(TAG, "Method " + method + " mark as @TransactProxy");
+
             if (proxy.value() != null && proxy.value().length > 0) {
                 transactCodes.addAll(Arrays.stream(proxy.value()).boxed().collect(Collectors.toList()));
             }
@@ -58,6 +67,8 @@ public final class ServerProxy {
             try {
                 original.getMethod(method.getName(), method.getParameterTypes());
             } catch (final ReflectiveOperationException e) {
+                Log.w(TAG, "Transact code of " + method + " not found.", e);
+
                 if (strict) {
                     throw e;
                 }
@@ -67,7 +78,10 @@ public final class ServerProxy {
 
             final Field code = stub.getDeclaredField("TRANSACTION_" + method.getName());
             code.setAccessible(true);
-            transactCodes.add(code.getInt(original));
+            final int codeValue = code.getInt(original);
+
+            Log.d(TAG, "Transact code of " + method.getName() + " is " + codeValue);
+            transactCodes.add(codeValue);
         }
 
         return (o, r) -> new Binder() {
