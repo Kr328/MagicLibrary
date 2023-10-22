@@ -6,7 +6,7 @@ plugins {
 
 subprojects {
     group = "com.github.kr328.magic"
-    version = "1.7"
+    version = "1.8"
 
     plugins.withId("com.android.base") {
         extensions.configure<BaseExtension> {

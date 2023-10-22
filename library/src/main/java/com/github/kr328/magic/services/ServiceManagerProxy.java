@@ -7,6 +7,9 @@ import android.os.IServiceManager;
 import android.os.ServiceManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -19,19 +22,21 @@ import java.util.function.BiFunction;
 public class ServiceManagerProxy {
     private static final String TAG = "ServiceManagerProxy";
 
+    @Nullable
     private final BiFunction<String, Binder, Binder> addServiceFilter;
+    @Nullable
     private final BiFunction<String, IBinder, IBinder> getServiceFilter;
     private boolean installed = false;
 
     private ServiceManagerProxy(
-            final BiFunction<String, Binder, Binder> addServiceFilter,
-            final BiFunction<String, IBinder, IBinder> getServiceFilter
+            @Nullable final BiFunction<String, Binder, Binder> addServiceFilter,
+            @Nullable final BiFunction<String, IBinder, IBinder> getServiceFilter
     ) {
         this.addServiceFilter = addServiceFilter;
         this.getServiceFilter = getServiceFilter;
     }
 
-    public static void install(final Interceptor interceptor) throws ReflectiveOperationException {
+    public static void install(@NonNull final Interceptor interceptor) throws ReflectiveOperationException {
         final Method mGetIServiceManager = ServiceManager.class.getDeclaredMethod("getIServiceManager");
         final Field fSServiceManager = ServiceManager.class.getDeclaredField("sServiceManager");
 
@@ -92,6 +97,7 @@ public class ServiceManagerProxy {
         fSServiceManager.set(null, proxy);
     }
 
+    @NonNull
     private static ClassLoader getClassLoader() {
         final ClassLoader self = ServiceManagerProxy.class.getClassLoader();
         if (self != null) {
@@ -108,7 +114,8 @@ public class ServiceManagerProxy {
 
         install(new Interceptor() {
             @Override
-            public IBinder getService(final String name, final IBinder service) {
+            @Nullable
+            public IBinder getService(@NonNull final String name, final IBinder service) {
                 if (getServiceFilter != null) {
                     return getServiceFilter.apply(name, service);
                 }
@@ -117,7 +124,8 @@ public class ServiceManagerProxy {
             }
 
             @Override
-            public Binder addService(final String name, final Binder service) {
+            @Nullable
+            public Binder addService(@NonNull final String name, final Binder service) {
                 if (addServiceFilter != null) {
                     return addServiceFilter.apply(name, service);
                 }
@@ -142,29 +150,36 @@ public class ServiceManagerProxy {
     }
 
     public abstract static class Interceptor {
-        public IBinder getService(final String name, final IBinder service) {
+        @Nullable
+        public IBinder getService(@NonNull final String name, @Nullable final IBinder service) {
             return service;
         }
 
-        public Binder addService(final String name, final Binder service) {
+        @Nullable
+        public Binder addService(@NonNull final String name, @Nullable final Binder service) {
             return service;
         }
     }
 
     public static final class Builder {
+        @Nullable
         private BiFunction<String, Binder, Binder> addServiceFilter;
+        @Nullable
         private BiFunction<String, IBinder, IBinder> getServiceFilter;
 
-        public Builder setAddServiceFilter(final BiFunction<String, Binder, Binder> func) {
+        @NonNull
+        public Builder setAddServiceFilter(@Nullable final BiFunction<String, Binder, Binder> func) {
             this.addServiceFilter = func;
             return this;
         }
 
-        public Builder setGetServiceFilter(final BiFunction<String, IBinder, IBinder> func) {
+        @NonNull
+        public Builder setGetServiceFilter(@Nullable final BiFunction<String, IBinder, IBinder> func) {
             this.getServiceFilter = func;
             return this;
         }
 
+        @NonNull
         public ServiceManagerProxy build() {
             BiFunction<String, Binder, Binder> add = addServiceFilter;
             BiFunction<String, IBinder, IBinder> get = getServiceFilter;

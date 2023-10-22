@@ -32,4 +32,6 @@ afterEvaluate {
 
 dependencies {
     compileOnly(project(":hideapi"))
+
+    compileOnly("androidx.annotation:annotation:1.7.0")
 }
