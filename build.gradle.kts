@@ -1,7 +1,7 @@
 import com.android.build.gradle.BaseExtension
 
 plugins {
-    id("com.android.library") version "8.0.2" apply false
+    id("com.android.library") version "8.1.2" apply false
 }
 
 subprojects {
