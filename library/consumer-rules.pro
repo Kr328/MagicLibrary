@@ -22,3 +22,7 @@
 
 -dontwarn android.os.IServiceManager
 -dontwarn android.os.ServiceManager
+
+-keepclassmembers class * {
+    @com.github.kr328.magic.aidl.TransactProxy *;
+}
